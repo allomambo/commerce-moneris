@@ -17,6 +17,7 @@ use yii\base\Event;
  */
 class Plugin extends BasePlugin
 {
+    public static ?Plugin $instance = null;
     public string $schemaVersion = '1.0.0-alpha.1';
     public bool $hasCpSettings = false;
 
@@ -42,7 +43,30 @@ class Plugin extends BasePlugin
             View::class,
             View::EVENT_REGISTER_CP_TEMPLATE_ROOTS,
             function (RegisterTemplateRootsEvent $event) {
-                $event->roots['moneris-gateway'] = $this->getBasePath() . DIRECTORY_SEPARATOR . 'templates';
+                // For plugins, getBasePath() returns the src/ directory
+                // We need to go up one level to get the plugin root (where composer.json is)
+                $pluginBasePath = $this->getBasePath();
+                $pluginRoot = dirname($pluginBasePath);
+                $templatePath = $pluginRoot . DIRECTORY_SEPARATOR . 'templates';
+                
+                // Register the template root if the directory exists
+                if (is_dir($templatePath)) {
+                    $event->roots['moneris-gateway'] = $templatePath;
+                } else {
+                    // Fallback: try using dirname from current file
+                    $fallbackPath = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'templates';
+                    if (is_dir($fallbackPath)) {
+                        $event->roots['moneris-gateway'] = $fallbackPath;
+                    } else {
+                        // Log error for debugging
+                        Craft::error("Moneris plugin: Template directory not found. Tried: {$templatePath} and {$fallbackPath}", __METHOD__);
+                    }
+                }
+                
+                // Ensure Craft's core templates are available
+                if (!isset($event->roots['_includes'])) {
+                    $event->roots['_includes'] = Craft::getAlias('@craft/templates/_includes');
+                }
             }
         );
 

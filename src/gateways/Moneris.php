@@ -64,9 +64,17 @@ class Moneris extends Gateway
      */
     public function getSettingsHtml(): ?string
     {
-        return Craft::$app->getView()->renderTemplate('moneris-gateway/gateways/settings', [
+        $view = Craft::$app->getView();
+        $oldMode = $view->getTemplateMode();
+        $view->setTemplateMode(View::TEMPLATE_MODE_CP);
+        
+        $html = $view->renderTemplate('moneris-gateway/gateways/settings', [
             'gateway' => $this,
         ]);
+        
+        $view->setTemplateMode($oldMode);
+        
+        return $html;
     }
 
     /**
