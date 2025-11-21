@@ -1,0 +1,39 @@
+{
+    "name": "allomambo/commerce-moneris",
+    "version": "1.0.0-alpha.1",
+    "description": "Moneris payment gateway for Craft Commerce",
+    "type": "craft-plugin",
+    "keywords": ["moneris", "payment", "gateway", "commerce"],
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Maxime Lafreniere",
+            "email": "jesuis@maximelafreniere.com"
+        }
+    ],
+    "support": {
+        "email": "jesuis@maximelafreniere.com",
+        "issues": "https://github.com/allomambo/commerce-moneris/issues?state=open",
+        "source": "https://github.com/allomambo/commerce-moneris",
+        "docs": "https://github.com/allomambo/commerce-moneris/blob/master/README.md"
+    },
+    "require": {
+        "php": "^8.2",
+        "craftcms/cms": "^5.1.0",
+        "craftcms/commerce": "^5.0.13",
+        "allomambo/moneris-gateway-api-php": "dev-main"
+    },
+    "autoload": {
+        "psr-4": {
+            "allomambo\\CommerceMoneris\\": "src/"
+        }
+    },
+    "extra": {
+        "name": "Moneris for Craft Commerce",
+        "handle": "_commerce-moneris",
+        "class": "allomambo\\CommerceMoneris\\Plugin",
+        "developer": "MamboMambo",
+        "developerUrl": "https://github.com/allomambo"
+    }
+}
+

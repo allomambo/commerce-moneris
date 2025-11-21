@@ -1,0 +1,58 @@
+{% import "_includes/forms" as forms %}
+
+{{ forms.autosuggestField({
+    label: "Store ID"|t('moneris-gateway'),
+    instructions: "Your Moneris Store ID"|t('moneris-gateway'),
+    id: 'storeId',
+    name: 'storeId',
+    value: gateway.storeId,
+    errors: gateway.getErrors('storeId'),
+    required: false,
+    suggestEnvVars: true,
+}) }}
+
+{{ forms.autosuggestField({
+    label: "API Token"|t('moneris-gateway'),
+    instructions: "Your Moneris API Token"|t('moneris-gateway'),
+    id: 'apiToken',
+    name: 'apiToken',
+    value: gateway.apiToken,
+    errors: gateway.getErrors('apiToken'),
+    required: false,
+    type: 'password',
+    suggestEnvVars: true,
+}) }}
+
+{{ forms.selectField({
+    label: "Environment"|t('moneris-gateway'),
+    instructions: "Select the environment to use"|t('moneris-gateway'),
+    id: 'environment',
+    name: 'environment',
+    value: gateway.environment,
+    errors: gateway.getErrors('environment'),
+    options: {
+        'staging': 'Staging'|t('moneris-gateway'),
+        'production': 'Production'|t('moneris-gateway'),
+    },
+    required: true,
+}) }}
+
+{{ forms.lightswitchField({
+    label: "Enable AVS"|t('moneris-gateway'),
+    instructions: "Enable Address Verification System"|t('moneris-gateway'),
+    id: 'enableAvs',
+    name: 'enableAvs',
+    on: gateway.enableAvs,
+    errors: gateway.getErrors('enableAvs'),
+}) }}
+
+{{ forms.lightswitchField({
+    label: "Enable CVD"|t('moneris-gateway'),
+    instructions: "Enable Card Verification Digit"|t('moneris-gateway'),
+    id: 'enableCvd',
+    name: 'enableCvd',
+    on: gateway.enableCvd,
+    errors: gateway.getErrors('enableCvd'),
+}) }}
+
+
