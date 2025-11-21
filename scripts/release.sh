@@ -9,39 +9,11 @@ if [[ ! -f "composer.json" ]]; then
 fi
 
 if [[ $# -ne 1 ]]; then
-  echo "Usage: $0 [patch|minor|major|alpha|beta]"
+  echo "Usage: $0 [patch|minor|major|alpha|beta|stable]"
   exit 1
 fi
 
 BUMP=$1
-
-# Check for gh CLI
-if ! command -v gh &> /dev/null; then
-  echo "❌ GitHub CLI (gh) is not installed."
-  echo "Install it with:"
-  echo "  brew install gh      # macOS"
-  echo "  sudo apt install gh  # Ubuntu/Debian"
-  echo "  choco install gh     # Windows"
-  exit 1
-fi
-
-# Check for gh authentication
-if ! gh auth status &> /dev/null; then
-  echo "❌ GitHub CLI is not authenticated."
-  echo "Authenticate with:"
-  echo "  gh auth login"
-  exit 1
-fi
-
-echo "🔍 Checking working directory..."
-if [[ -n $(git status --porcelain) ]]; then
-  echo "❌ Please commit or stash your changes before releasing."
-  exit 1
-fi
-
-echo "🚀 Checking out dev and pulling latest..."
-git checkout dev
-git pull
 
 echo "🔢 Reading current version from composer.json..."
 VERSION=$(jq -r '.version' composer.json)
@@ -115,6 +87,14 @@ case $BUMP in
       NEW_VERSION="$MAJOR.$MINOR.$PATCH-beta.1"
     fi
     ;;
+  stable)
+    if [[ -z "$PRERELEASE_TYPE" ]]; then
+      echo "❌ Already on a stable version ($VERSION). Use patch/minor/major to bump."
+      exit 1
+    fi
+    # Remove prerelease suffix to make it stable
+    NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+    ;;
   *)
     echo "❌ Invalid bump type: $BUMP"
     exit 1
@@ -135,6 +115,34 @@ fi
 
 echo "✅ Proceeding with release v$NEW_VERSION..."
 echo ""
+
+# Check for gh CLI
+if ! command -v gh &> /dev/null; then
+  echo "❌ GitHub CLI (gh) is not installed."
+  echo "Install it with:"
+  echo "  brew install gh      # macOS"
+  echo "  sudo apt install gh  # Ubuntu/Debian"
+  echo "  choco install gh     # Windows"
+  exit 1
+fi
+
+# Check for gh authentication
+if ! gh auth status &> /dev/null; then
+  echo "❌ GitHub CLI is not authenticated."
+  echo "Authenticate with:"
+  echo "  gh auth login"
+  exit 1
+fi
+
+echo "🔍 Checking working directory..."
+if [[ -n $(git status --porcelain) ]]; then
+  echo "❌ Please commit or stash your changes before releasing."
+  exit 1
+fi
+
+echo "🚀 Checking out dev and pulling latest..."
+git checkout dev
+git pull
 
 # Check if this is a prerelease (alpha/beta)
 if [[ "$NEW_VERSION" =~ -(alpha|beta)\. ]]; then
