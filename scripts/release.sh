@@ -120,7 +120,21 @@ case $BUMP in
     exit 1
     ;;
 esac
-echo "🔖 New version: $NEW_VERSION"
+
+echo ""
+echo "🔖 New version will be: $NEW_VERSION"
+echo "📋 Current version: $VERSION"
+echo ""
+read -p "❓ Do you want to proceed with this release? (y/n): " -n 1 -r
+echo ""
+
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+  echo "❌ Release cancelled."
+  exit 0
+fi
+
+echo "✅ Proceeding with release v$NEW_VERSION..."
+echo ""
 
 # Check if this is a prerelease (alpha/beta)
 if [[ "$NEW_VERSION" =~ -(alpha|beta)\. ]]; then
