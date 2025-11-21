@@ -1,7 +1,7 @@
 {% import "_includes/forms" as forms %}
 
 <div class="moneris-payment-form">
-    {{ forms.textField({
+	{{ forms.textField({
         label: "Card Number"|t('moneris-gateway'),
         name: 'paymentForm[number]',
         value: paymentForm.number ?? '',
@@ -11,7 +11,7 @@
         maxlength: 19,
     }) }}
 
-    {{ forms.textField({
+	{{ forms.textField({
         label: "Expiry Date (MMYY)"|t('moneris-gateway'),
         name: 'paymentForm[expiry]',
         value: paymentForm.expiry ?? '',
@@ -21,25 +21,24 @@
         maxlength: 4,
     }) }}
 
-    {% if gateway.enableCvd %}
-        {{ forms.textField({
+	{% if gateway.enableCvd %}
+		{{ forms.textField({
             label: "CVD"|t('moneris-gateway'),
             name: 'paymentForm[cvd]',
             value: paymentForm.cvd ?? '',
             placeholder: '123',
+            required: true,
             autocomplete: 'cc-csc',
             maxlength: 4,
         }) }}
-    {% endif %}
+	{% endif %}
 </div>
 
 <style>
-    .moneris-payment-form {
-        margin: 1rem 0;
-    }
-    .moneris-payment-form .field {
-        margin-bottom: 1rem;
-    }
+	.moneris-payment-form {
+		margin: 1rem 0;
+	}
+	.moneris-payment-form .field {
+		margin-bottom: 1rem;
+	}
 </style>
-
-
