@@ -1,6 +1,6 @@
 {
   "name": "allomambo/commerce-moneris",
-  "version": "1.0.0-alpha.3",
+  "version": "1.0.0-beta.1",
   "description": "Moneris payment gateway for Craft Commerce",
   "type": "craft-plugin",
   "keywords": [
