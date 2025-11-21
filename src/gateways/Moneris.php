@@ -204,7 +204,6 @@ class Moneris extends Gateway
      */
     public function capture(Transaction $transaction, string $reference): RequestResponseInterface
     {
-        $this->includeMonerisLibrary();
         $moneris = $this->getMonerisInstance();
 
         // Format amount: Craft Commerce stores amounts in cents, Moneris expects cents as string with 2 decimals
@@ -243,7 +242,6 @@ class Moneris extends Gateway
      */
     public function refund(Transaction $transaction): RequestResponseInterface
     {
-        $this->includeMonerisLibrary();
         $moneris = $this->getMonerisInstance();
 
         // Get the parent transaction reference (the original successful transaction)
@@ -364,7 +362,6 @@ class Moneris extends Gateway
      */
     protected function createRequestResponse(Transaction $transaction, BasePaymentForm $form, string $type): RequestResponseInterface
     {
-        $this->includeMonerisLibrary();
         $moneris = $this->getMonerisInstance();
 
         /** @var \allomambo\CommerceMoneris\models\MonerisPaymentForm $form */
@@ -547,35 +544,6 @@ class Moneris extends Gateway
         $streetName = preg_replace('/^\d+\s+/', '', $address);
 
         return $streetName ?: '';
-    }
-
-    /**
-     * Include the Moneris library if it exists
-     */
-    protected function includeMonerisLibrary(): void
-    {
-        static $included = false;
-
-        if ($included) {
-            return;
-        }
-
-        // Try vendor directory first (Composer installation)
-        // Use CRAFT_VENDOR_PATH constant if available, otherwise use @root alias
-        if (defined('CRAFT_VENDOR_PATH')) {
-            $vendorPath = CRAFT_VENDOR_PATH . '/allomambo/moneris-gateway-api-php/mpgClasses.php';
-        } else {
-            $vendorPath = Craft::getAlias('@root/vendor/allomambo/moneris-gateway-api-php/mpgClasses.php');
-        }
-
-        if (file_exists($vendorPath)) {
-            require_once $vendorPath;
-            $included = true;
-            return;
-        }
-
-        Craft::error('Moneris library not found. Checked: ' . $vendorPath, __METHOD__);
-        throw new \Exception('Moneris library not found. Please ensure "allomambo/moneris-gateway-api-php" is installed via Composer.');
     }
 
     /**
