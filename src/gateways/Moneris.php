@@ -67,13 +67,13 @@ class Moneris extends Gateway
         $view = Craft::$app->getView();
         $oldMode = $view->getTemplateMode();
         $view->setTemplateMode(View::TEMPLATE_MODE_CP);
-        
+
         $html = $view->renderTemplate('moneris-gateway/gateways/settings', [
             'gateway' => $this,
         ]);
-        
+
         $view->setTemplateMode($oldMode);
-        
+
         return $html;
     }
 
@@ -384,13 +384,29 @@ class Moneris extends Gateway
             'crypt_type' => '7', // SSL merchant (most common encryption type)
         ];
 
-        // Add CVD if provided
-        if (!empty($form->cvd)) {
-            $params['cvd'] = $form->cvd;
-        }
-
         /** @var object $mpgTxn */
         $mpgTxn = new \mpgTransaction($params);
+
+        // Add CVD if enabled - use mpgCvdInfo to explicitly request CVD checking
+        if ($this->enableCvd) {
+            $cvdValue = !empty($form->cvd) ? $form->cvd : '';
+
+            // CVD Indicator values:
+            // 0 = CVD value not provided
+            // 1 = CVD value provided
+            // 2 = CVD value illegible
+            // 9 = Cardholder states CVD not available
+            $cvdIndicator = !empty($form->cvd) ? '1' : '0';
+
+            // Create CVD info object to explicitly request CVD checking
+            $cvdTemplate = [
+                'cvd_indicator' => $cvdIndicator,
+                'cvd_value' => $cvdValue,
+            ];
+            /** @var object $mpgCvdInfo */
+            $mpgCvdInfo = new \mpgCvdInfo($cvdTemplate);
+            $mpgTxn->setCvdInfo($mpgCvdInfo);
+        }
 
         // Add AVS if enabled - always send AVS data when enabled, even if minimal
         if ($this->enableAvs) {
@@ -403,6 +419,14 @@ class Moneris extends Gateway
                 $avsStreetName = $this->extractStreetName($billingAddress->address1 ?? '');
                 $avsZipcode = $billingAddress->zipCode ?? '';
             }
+
+            // Log AVS data being sent
+            Craft::info(
+                'Sending AVS data - Street Number: "' . $avsStreetNumber .
+                    '", Street Name: "' . $avsStreetName .
+                    '", Zipcode: "' . $avsZipcode . '"',
+                __METHOD__
+            );
 
             // Always set AVS when enabled, even with empty values (Moneris will perform the check)
             $avsTemplate = [
@@ -592,4 +616,3 @@ class Moneris extends Gateway
         }
     }
 }
-
