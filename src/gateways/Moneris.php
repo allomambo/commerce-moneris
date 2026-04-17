@@ -209,11 +209,24 @@ class Moneris extends Gateway
         // Format amount: Craft Commerce stores amounts in cents, Moneris expects cents as string with 2 decimals
         $compAmount = number_format($transaction->paymentAmount, 2, '.', '');
 
+        // Reconstruct the Moneris order_id from the original authorize transaction.
+        // The order_id sent to Moneris is always "{order->number}-{transaction->id}" so
+        // we must use the parent transaction's ID, not the current capture transaction's ID.
+        $parentTransaction = $transaction->parentId
+            ? \craft\commerce\Plugin::getInstance()->getTransactions()->getTransactionById($transaction->parentId)
+            : null;
+
+        if (!$parentTransaction) {
+            throw new \Exception('Cannot process capture: original authorize transaction not found.');
+        }
+
+        $monerisOrderId = $parentTransaction->order->number . '-' . $parentTransaction->id;
+
         $params = [
             'type' => 'completion',
             'txn_number' => $reference,
             'comp_amount' => $compAmount,
-            'order_id' => $transaction->order->number,
+            'order_id' => $monerisOrderId,
         ];
 
         /** @var object $mpgTxn */
@@ -273,8 +286,9 @@ class Moneris extends Gateway
         // Format amount: Craft Commerce stores amounts in cents, Moneris expects cents as string with 2 decimals
         $amount = number_format($transaction->paymentAmount, 2, '.', '');
 
-        // Use the original transaction's order_id (required by Moneris for refunds)
-        $originalOrderId = $parentTransaction->order->number ?? $transaction->order->number;
+        // Reconstruct the Moneris order_id from the original successful transaction.
+        // The order_id sent to Moneris is always "{order->number}-{transaction->id}".
+        $originalOrderId = $parentTransaction->order->number . '-' . $parentTransaction->id;
 
         $params = [
             'type' => 'refund',
@@ -373,7 +387,7 @@ class Moneris extends Gateway
 
         $params = [
             'type' => $type,
-            'order_id' => $order->number,
+            'order_id' => $order->number . '-' . $transaction->id,
             'cust_id' => $order->email,
             'amount' => $amount,
             'pan' => $form->number,
