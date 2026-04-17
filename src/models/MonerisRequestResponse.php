@@ -2,8 +2,10 @@
 
 namespace allomambo\CommerceMoneris\models;
 
+use Craft;
 use craft\commerce\base\RequestResponseInterface;
 use craft\commerce\models\Transaction;
+use allomambo\CommerceMoneris\helpers\MonerisResponseMessage;
 
 /**
  * Moneris Request Response
@@ -21,12 +23,20 @@ class MonerisRequestResponse implements RequestResponseInterface
     protected Transaction $transaction;
 
     /**
+     * @var string The Moneris order_id that was sent with this request (e.g. "{order->number}-{suffix}").
+     *             Stored in getData() so capture and refund can retrieve it from the parent transaction's
+     *             response without needing to reconstruct or rely on transaction->id.
+     */
+    protected string $monerisOrderId;
+
+    /**
      * Constructor
      */
-    public function __construct(object $response, Transaction $transaction)
+    public function __construct(object $response, Transaction $transaction, string $monerisOrderId = '')
     {
         $this->response = $response;
         $this->transaction = $transaction;
+        $this->monerisOrderId = $monerisOrderId;
     }
 
     /**
@@ -118,37 +128,19 @@ class MonerisRequestResponse implements RequestResponseInterface
     public function getMessage(): string
     {
         if (!is_object($this->response)) {
-            return 'Invalid response from payment gateway';
+            return Craft::t('moneris-gateway', 'Invalid response from payment gateway');
         }
 
-        $message = '';
-        if (method_exists($this->response, 'getMessage')) {
-            $message = $this->response->getMessage() ?? '';
+        // getTimedOut() returns the string "true"/"false", not a boolean
+        if (method_exists($this->response, 'getTimedOut') && $this->response->getTimedOut() === 'true') {
+            return Craft::t('moneris-gateway', 'Payment timed out. Please try again.');
         }
 
-        if (empty($message)) {
-            // Check for timeout
-            if (method_exists($this->response, 'getTimedOut') && $this->response->getTimedOut()) {
-                return 'Transaction timed out';
-            }
+        $iso  = method_exists($this->response, 'getISO') ? ((string)($this->response->getISO() ?? '')) : '';
+        $code = $this->getResponseCode();
+        $raw  = method_exists($this->response, 'getMessage') ? ((string)($this->response->getMessage() ?? '')) : '';
 
-            // Check for ISO code (error code)
-            if (method_exists($this->response, 'getISO')) {
-                $iso = $this->response->getISO() ?? '';
-                if (!empty($iso) && $iso !== 'null') {
-                    return 'ISO Error Code: ' . $iso;
-                }
-            }
-
-            $responseCode = $this->getResponseCode();
-            if (!empty($responseCode) && $responseCode !== 'null') {
-                return 'Response code: ' . $responseCode;
-            } else {
-                return 'Could not process transaction';
-            }
-        }
-
-        return (string)$message;
+        return MonerisResponseMessage::resolve($iso, $code, $raw);
     }
 
     /**
@@ -166,6 +158,7 @@ class MonerisRequestResponse implements RequestResponseInterface
             'card_type' => $this->response->getCardType() ?? '',
             'trans_date' => $this->response->getTransDate() ?? '',
             'trans_time' => $this->response->getTransTime() ?? '',
+            'moneris_order_id' => $this->monerisOrderId,
         ];
     }
 

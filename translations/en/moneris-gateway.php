@@ -19,5 +19,28 @@ return [
     'CVD' => 'CVD',
     'Store ID is required. Please enter a value or use an environment variable.' => 'Store ID is required. Please enter a value or use an environment variable.',
     'API Token is required. Please enter a value or use an environment variable.' => 'API Token is required. Please enter a value or use an environment variable.',
+
+    // Payment error messages
+    'Invalid response from payment gateway' => 'Invalid response from payment gateway',
+    'Payment timed out. Please try again.' => 'Payment timed out. Please try again.',
+    'Your payment was declined. Please contact your bank or try a different card.' => 'Your payment was declined. Please contact your bank or try a different card.',
+    'Your payment was declined. Please try a different card.' => 'Your payment was declined. Please try a different card.',
+    'The card number is invalid. Please check and try again.' => 'The card number is invalid. Please check and try again.',
+    'An error occurred. Please try again.' => 'An error occurred. Please try again.',
+    'Please use a different card.' => 'Please use a different card.',
+    'Too many incorrect PIN attempts. Please contact your bank.' => 'Too many incorrect PIN attempts. Please contact your bank.',
+    'No chequing account found for this card.' => 'No chequing account found for this card.',
+    'No savings account found for this card.' => 'No savings account found for this card.',
+    'Insufficient funds. Please use a different card.' => 'Insufficient funds. Please use a different card.',
+    'This card has expired. Please use a different card.' => 'This card has expired. Please use a different card.',
+    'Incorrect PIN. Please try again.' => 'Incorrect PIN. Please try again.',
+    'This card is not set up for this type of transaction.' => 'This card is not set up for this type of transaction.',
+    'This transaction is not permitted for this card.' => 'This transaction is not permitted for this card.',
+    'This transaction exceeds your card limit.' => 'This transaction exceeds your card limit.',
+    'Security code error. Please check and try again.' => 'Security code error. Please check and try again.',
+    'Your bank is temporarily unavailable. Please try again later.' => 'Your bank is temporarily unavailable. Please try again later.',
+    'A system error occurred. Please try again later.' => 'A system error occurred. Please try again later.',
+    'Your payment could not be processed. Please try again.' => 'Your payment could not be processed. Please try again.',
+    'The payment gateway did not respond. Please try again.' => 'The payment gateway did not respond. Please try again.',
 ];
 
