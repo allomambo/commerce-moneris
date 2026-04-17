@@ -21,12 +21,20 @@ class MonerisRequestResponse implements RequestResponseInterface
     protected Transaction $transaction;
 
     /**
+     * @var string The Moneris order_id that was sent with this request (e.g. "{order->number}-{suffix}").
+     *             Stored in getData() so capture and refund can retrieve it from the parent transaction's
+     *             response without needing to reconstruct or rely on transaction->id.
+     */
+    protected string $monerisOrderId;
+
+    /**
      * Constructor
      */
-    public function __construct(object $response, Transaction $transaction)
+    public function __construct(object $response, Transaction $transaction, string $monerisOrderId = '')
     {
         $this->response = $response;
         $this->transaction = $transaction;
+        $this->monerisOrderId = $monerisOrderId;
     }
 
     /**
@@ -166,6 +174,7 @@ class MonerisRequestResponse implements RequestResponseInterface
             'card_type' => $this->response->getCardType() ?? '',
             'trans_date' => $this->response->getTransDate() ?? '',
             'trans_time' => $this->response->getTransTime() ?? '',
+            'moneris_order_id' => $this->monerisOrderId,
         ];
     }
 

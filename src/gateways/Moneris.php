@@ -209,9 +209,8 @@ class Moneris extends Gateway
         // Format amount: Craft Commerce stores amounts in cents, Moneris expects cents as string with 2 decimals
         $compAmount = number_format($transaction->paymentAmount, 2, '.', '');
 
-        // Reconstruct the Moneris order_id from the original authorize transaction.
-        // The order_id sent to Moneris is always "{order->number}-{transaction->id}" so
-        // we must use the parent transaction's ID, not the current capture transaction's ID.
+        // Retrieve the Moneris order_id that was stored in the parent authorize transaction's response.
+        // We cannot reconstruct it because it contains a random suffix generated at purchase time.
         $parentTransaction = $transaction->parentId
             ? \craft\commerce\Plugin::getInstance()->getTransactions()->getTransactionById($transaction->parentId)
             : null;
@@ -220,7 +219,11 @@ class Moneris extends Gateway
             throw new \Exception('Cannot process capture: original authorize transaction not found.');
         }
 
-        $monerisOrderId = $parentTransaction->order->number . '-' . $parentTransaction->id;
+        $monerisOrderId = $this->getMonerisOrderIdFromResponse($parentTransaction);
+
+        if (empty($monerisOrderId)) {
+            throw new \Exception('Cannot process capture: moneris_order_id not found in original transaction response.');
+        }
 
         $params = [
             'type' => 'completion',
@@ -286,9 +289,14 @@ class Moneris extends Gateway
         // Format amount: Craft Commerce stores amounts in cents, Moneris expects cents as string with 2 decimals
         $amount = number_format($transaction->paymentAmount, 2, '.', '');
 
-        // Reconstruct the Moneris order_id from the original successful transaction.
-        // The order_id sent to Moneris is always "{order->number}-{transaction->id}".
-        $originalOrderId = $parentTransaction->order->number . '-' . $parentTransaction->id;
+        // Retrieve the Moneris order_id that was stored in the original successful transaction's response.
+        // We cannot reconstruct it because it contains a random suffix generated at purchase time.
+        $originalOrderId = $this->getMonerisOrderIdFromResponse($parentTransaction);
+
+        if (empty($originalOrderId)) {
+            throw new \Exception('Cannot process refund: moneris_order_id not found in original transaction response.');
+        }
+
 
         $params = [
             'type' => 'refund',
@@ -385,9 +393,18 @@ class Moneris extends Gateway
         // Format amount: Craft Commerce stores amounts in cents, Moneris expects cents as string with 2 decimals
         $amount = number_format($transaction->paymentAmount, 2, '.', '');
 
+        // Build a Moneris-unique order_id for this attempt.
+        // Moneris rejects reuse of the same order_id, so we append a random 8-char suffix.
+        // $transaction->id may be null at this point (transaction not yet persisted), so we
+        // use random_bytes instead. The full order_id is stored in the transaction response
+        // (getData()) so capture and refund can retrieve it without reconstruction.
+        $attemptSuffix = bin2hex(random_bytes(4)); // 8 hex chars, cryptographically unique
+        $monerisOrderId = substr($order->number, 0, 40) . '-' . $attemptSuffix; // max 49 chars (Moneris limit: 50)
+
+
         $params = [
             'type' => $type,
-            'order_id' => $order->number . '-' . $transaction->id,
+            'order_id' => $monerisOrderId,
             'cust_id' => $order->email,
             'amount' => $amount,
             'pan' => $form->number,
@@ -457,7 +474,7 @@ class Moneris extends Gateway
         $mpgHttpPost = new \mpgHttpsPost($moneris->getStoreId(), $moneris->getApiToken(), $mpgRequest);
         $mpgResponse = $mpgHttpPost->getMpgResponse();
 
-        return new \allomambo\CommerceMoneris\models\MonerisRequestResponse($mpgResponse, $transaction);
+        return new \allomambo\CommerceMoneris\models\MonerisRequestResponse($mpgResponse, $transaction, $monerisOrderId);
     }
 
     /**
@@ -486,6 +503,28 @@ class Moneris extends Gateway
 
         // Use Craft's parseEnv to resolve environment variables (handles $VAR_NAME format)
         return App::parseEnv($this->apiToken) ?: $this->apiToken;
+    }
+
+    /**
+     * Retrieve the Moneris order_id stored in a transaction's response data.
+     *
+     * The order_id is saved as `moneris_order_id` inside the response JSON by
+     * MonerisRequestResponse::getData(). We normalise the response field regardless
+     * of whether Craft has already decoded it to an array or left it as a JSON string.
+     */
+    protected function getMonerisOrderIdFromResponse(Transaction $transaction): string
+    {
+        $response = $transaction->response;
+
+        if (is_string($response)) {
+            $response = json_decode($response, true) ?? [];
+        }
+
+        if (!is_array($response)) {
+            return '';
+        }
+
+        return (string)($response['moneris_order_id'] ?? '');
     }
 
     /**
