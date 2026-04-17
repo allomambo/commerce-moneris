@@ -19,5 +19,28 @@ return [
     'CVD' => 'CVD',
     'Store ID is required. Please enter a value or use an environment variable.' => 'L\'ID du magasin est requis. Veuillez entrer une valeur ou utiliser une variable d\'environnement.',
     'API Token is required. Please enter a value or use an environment variable.' => 'Le jeton API est requis. Veuillez entrer une valeur ou utiliser une variable d\'environnement.',
+
+    // Messages d'erreur de paiement
+    'Invalid response from payment gateway' => 'Réponse invalide de la passerelle de paiement.',
+    'Payment timed out. Please try again.' => 'Le délai de paiement a expiré. Veuillez réessayer.',
+    'Your payment was declined. Please contact your bank or try a different card.' => 'Votre paiement a été refusé. Veuillez contacter votre banque ou utiliser une autre carte.',
+    'Your payment was declined. Please try a different card.' => 'Votre paiement a été refusé. Veuillez utiliser une autre carte.',
+    'The card number is invalid. Please check and try again.' => 'Le numéro de carte est invalide. Veuillez vérifier et réessayer.',
+    'An error occurred. Please try again.' => 'Une erreur est survenue. Veuillez réessayer.',
+    'Please use a different card.' => 'Veuillez utiliser une autre carte.',
+    'Too many incorrect PIN attempts. Please contact your bank.' => 'Trop de tentatives de NIP incorrectes. Veuillez contacter votre banque.',
+    'No chequing account found for this card.' => 'Aucun compte chèques trouvé pour cette carte.',
+    'No savings account found for this card.' => 'Aucun compte épargne trouvé pour cette carte.',
+    'Insufficient funds. Please use a different card.' => 'Fonds insuffisants. Veuillez utiliser une autre carte.',
+    'This card has expired. Please use a different card.' => 'Cette carte est expirée. Veuillez utiliser une autre carte.',
+    'Incorrect PIN. Please try again.' => 'NIP incorrect. Veuillez réessayer.',
+    'This card is not set up for this type of transaction.' => 'Cette carte n\'est pas configurée pour ce type de transaction.',
+    'This transaction is not permitted for this card.' => 'Cette transaction n\'est pas autorisée pour cette carte.',
+    'This transaction exceeds your card limit.' => 'Cette transaction dépasse la limite de votre carte.',
+    'Security code error. Please check and try again.' => 'Erreur de code de sécurité. Veuillez vérifier et réessayer.',
+    'Your bank is temporarily unavailable. Please try again later.' => 'Votre banque est temporairement indisponible. Veuillez réessayer plus tard.',
+    'A system error occurred. Please try again later.' => 'Une erreur système est survenue. Veuillez réessayer plus tard.',
+    'Your payment could not be processed. Please try again.' => 'Votre paiement n\'a pas pu être traité. Veuillez réessayer.',
+    'The payment gateway did not respond. Please try again.' => 'La passerelle de paiement n\'a pas répondu. Veuillez réessayer.',
 ];
 
