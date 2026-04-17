@@ -131,7 +131,8 @@ class MonerisRequestResponse implements RequestResponseInterface
             return Craft::t('moneris-gateway', 'Invalid response from payment gateway');
         }
 
-        if (method_exists($this->response, 'getTimedOut') && $this->response->getTimedOut()) {
+        // getTimedOut() returns the string "true"/"false", not a boolean
+        if (method_exists($this->response, 'getTimedOut') && $this->response->getTimedOut() === 'true') {
             return Craft::t('moneris-gateway', 'Payment timed out. Please try again.');
         }
 
