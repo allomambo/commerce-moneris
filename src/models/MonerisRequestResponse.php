@@ -2,8 +2,10 @@
 
 namespace allomambo\CommerceMoneris\models;
 
+use Craft;
 use craft\commerce\base\RequestResponseInterface;
 use craft\commerce\models\Transaction;
+use allomambo\CommerceMoneris\helpers\MonerisResponseMessage;
 
 /**
  * Moneris Request Response
@@ -126,37 +128,19 @@ class MonerisRequestResponse implements RequestResponseInterface
     public function getMessage(): string
     {
         if (!is_object($this->response)) {
-            return 'Invalid response from payment gateway';
+            return Craft::t('moneris-gateway', 'Invalid response from payment gateway');
         }
 
-        $message = '';
-        if (method_exists($this->response, 'getMessage')) {
-            $message = $this->response->getMessage() ?? '';
+        // getTimedOut() returns the string "true"/"false", not a boolean
+        if (method_exists($this->response, 'getTimedOut') && $this->response->getTimedOut() === 'true') {
+            return Craft::t('moneris-gateway', 'Payment timed out. Please try again.');
         }
 
-        if (empty($message)) {
-            // Check for timeout
-            if (method_exists($this->response, 'getTimedOut') && $this->response->getTimedOut()) {
-                return 'Transaction timed out';
-            }
+        $iso  = method_exists($this->response, 'getISO') ? ((string)($this->response->getISO() ?? '')) : '';
+        $code = $this->getResponseCode();
+        $raw  = method_exists($this->response, 'getMessage') ? ((string)($this->response->getMessage() ?? '')) : '';
 
-            // Check for ISO code (error code)
-            if (method_exists($this->response, 'getISO')) {
-                $iso = $this->response->getISO() ?? '';
-                if (!empty($iso) && $iso !== 'null') {
-                    return 'ISO Error Code: ' . $iso;
-                }
-            }
-
-            $responseCode = $this->getResponseCode();
-            if (!empty($responseCode) && $responseCode !== 'null') {
-                return 'Response code: ' . $responseCode;
-            } else {
-                return 'Could not process transaction';
-            }
-        }
-
-        return (string)$message;
+        return MonerisResponseMessage::resolve($iso, $code, $raw);
     }
 
     /**

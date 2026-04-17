@@ -92,7 +92,7 @@ class Plugin extends BasePlugin
         Craft::$app->i18n->translations['moneris-gateway'] = [
             'class' => \yii\i18n\PhpMessageSource::class,
             'sourceLanguage' => 'en',
-            'basePath' => $this->getBasePath() . DIRECTORY_SEPARATOR . 'translations',
+            'basePath' => dirname($this->getBasePath()) . DIRECTORY_SEPARATOR . 'translations',
         ];
     }
 }
