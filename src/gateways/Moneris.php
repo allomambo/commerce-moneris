@@ -37,9 +37,10 @@ class Moneris extends Gateway
     public ?string $apiToken = null;
 
     /**
-     * @var string Environment: 'production' or 'staging'
+     * @var bool|string Whether to use Moneris test/staging mode.
+     * Defaults to true; must be explicitly set to false (in settings/YAML or via an env var) for production.
      */
-    public string $environment = 'staging';
+    public bool|string $testMode = true;
 
     /**
      * @var bool Enable AVS (Address Verification System)
@@ -57,6 +58,30 @@ class Moneris extends Gateway
     public static function displayName(): string
     {
         return Craft::t('moneris-gateway', 'Moneris');
+    }
+
+    /**
+     * Legacy setter for the removed `environment` setting.
+     *
+     * Craft configures gateways via property assignment (App::configure), not
+     * setAttributes(), so this is required to load stored staging/production values.
+     */
+    public function setEnvironment(mixed $value): void
+    {
+        $this->testMode = $value !== 'production';
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function setAttributes($values, $safeOnly = true): void
+    {
+        if (is_array($values) && array_key_exists('environment', $values) && !array_key_exists('testMode', $values)) {
+            $values['testMode'] = $values['environment'] !== 'production';
+            unset($values['environment']);
+        }
+
+        parent::setAttributes($values, $safeOnly);
     }
 
     /**
@@ -236,7 +261,6 @@ class Moneris extends Gateway
         $mpgTxn = new \mpgTransaction($params);
         /** @var object $mpgRequest */
         $mpgRequest = new \mpgRequest($mpgTxn);
-        // Set test mode based on environment
         $mpgRequest->setTestMode($moneris->isTestMode());
         /** @var object $mpgHttpPost */
         $mpgHttpPost = new \mpgHttpsPost($moneris->getStoreId(), $moneris->getApiToken(), $mpgRequest);
@@ -313,7 +337,6 @@ class Moneris extends Gateway
             $mpgTxn = new \mpgTransaction($params);
             /** @var object $mpgRequest */
             $mpgRequest = new \mpgRequest($mpgTxn);
-            // Set test mode based on environment
             $mpgRequest->setTestMode($moneris->isTestMode());
             /** @var object $mpgHttpPost */
             $mpgHttpPost = new \mpgHttpsPost($moneris->getStoreId(), $moneris->getApiToken(), $mpgRequest);
@@ -468,7 +491,6 @@ class Moneris extends Gateway
         }
         /** @var object $mpgRequest */
         $mpgRequest = new \mpgRequest($mpgTxn);
-        // Set test mode based on environment
         $mpgRequest->setTestMode($moneris->isTestMode());
         /** @var object $mpgHttpPost */
         $mpgHttpPost = new \mpgHttpsPost($moneris->getStoreId(), $moneris->getApiToken(), $mpgRequest);
@@ -506,6 +528,17 @@ class Moneris extends Gateway
     }
 
     /**
+     * Whether Moneris test/staging mode is enabled.
+     *
+     * Uses Craft's App::parseBooleanEnv() to handle environment variable references.
+     * Defaults to true unless the resolved value is explicitly false (settings/YAML or env var).
+     */
+    public function getTestMode(): bool
+    {
+        return App::parseBooleanEnv($this->testMode) !== false;
+    }
+
+    /**
      * Retrieve the Moneris order_id stored in a transaction's response data.
      *
      * The order_id is saved as `moneris_order_id` inside the response JSON by
@@ -539,16 +572,16 @@ class Moneris extends Gateway
             throw new \Exception('Moneris Store ID and API Token must be configured. Check your gateway settings or environment variables.');
         }
 
-        return new class($storeId, $apiToken, $this->environment) {
+        return new class($storeId, $apiToken, $this->getTestMode()) {
             private string $storeId;
             private string $apiToken;
             private bool $isTestMode;
 
-            public function __construct(string $storeId, string $apiToken, string $environment)
+            public function __construct(string $storeId, string $apiToken, bool $isTestMode)
             {
                 $this->storeId = $storeId;
                 $this->apiToken = $apiToken;
-                $this->isTestMode = $environment !== 'production';
+                $this->isTestMode = $isTestMode;
             }
 
             public function getStoreId(): string
@@ -607,7 +640,7 @@ class Moneris extends Gateway
         $rules = parent::defineRules();
         // Store ID and API Token are not required in the form (can use ENV vars)
         // But we validate that at least one source (stored or ENV) is available
-        $rules[] = [['environment'], 'in', 'range' => ['staging', 'production']];
+        // testMode may be a bool or an env var reference (e.g. $MONERIS_TEST_MODE)
         $rules[] = [['enableAvs', 'enableCvd'], 'boolean'];
         $rules[] = [['storeId'], 'validateStoreId'];
         $rules[] = [['apiToken'], 'validateApiToken'];
