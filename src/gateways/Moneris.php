@@ -60,6 +60,17 @@ class Moneris extends Gateway
     }
 
     /**
+     * Legacy setter for the removed `environment` setting.
+     *
+     * Craft configures gateways via property assignment (App::configure), not
+     * setAttributes(), so this is required to load stored staging/production values.
+     */
+    public function setEnvironment(mixed $value): void
+    {
+        $this->testMode = $value !== 'production';
+    }
+
+    /**
      * @inheritdoc
      */
     public function setAttributes($values, $safeOnly = true): void
