@@ -23,18 +23,14 @@
     suggestEnvVars: true,
 }) }}
 
-{{ forms.selectField({
-    label: "Environment"|t('moneris-gateway'),
-    instructions: "Select the environment to use"|t('moneris-gateway'),
-    id: 'environment',
-    name: 'environment',
-    value: gateway.environment,
-    errors: gateway.getErrors('environment'),
-    options: {
-        'staging': 'Staging'|t('moneris-gateway'),
-        'production': 'Production'|t('moneris-gateway'),
-    },
-    required: true,
+{{ forms.booleanMenuField({
+    label: "Test Mode"|t('moneris-gateway'),
+    instructions: "Enable Moneris test/staging mode. Disable for production."|t('moneris-gateway'),
+    id: 'testMode',
+    name: 'testMode',
+    value: gateway.testMode,
+    errors: gateway.getErrors('testMode'),
+    includeEnvVars: true,
 }) }}
 
 {{ forms.lightswitchField({
