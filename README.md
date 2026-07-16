@@ -1,92 +1,86 @@
 # Moneris Payment Gateway for Craft Commerce
 
-A Craft CMS plugin that provides a payment gateway integration for Moneris using the Moneris Gateway API PHP library.
+A Craft CMS plugin that provides a Moneris payment gateway for Craft Commerce, using the Moneris Gateway API PHP library.
+
+## Requirements
+
+- PHP 8.2 or later
+- Craft CMS 5.1.0 or later
+- Craft Commerce 5.0.13 or later
 
 ## Installation
 
-### Using Composer (Path Repository)
+1. Add the GitHub repository to your Craft project’s `composer.json` (required if the package is not available on Packagist):
 
-This plugin is configured to be installed via a path repository in your Craft CMS project's `composer.json`.
-
-1. The path repository is already configured in your project's `composer.json`:
    ```json
    {
        "repositories": [
            {
-               "type": "path",
-               "url": "../_plugins/moneris"
+               "type": "vcs",
+               "url": "git@github.com:allomambo/commerce-moneris.git"
            }
        ]
    }
    ```
 
-2. Install the plugin via Composer:
+2. Require the plugin:
+
    ```bash
-   composer require moneris/moneris
+   composer require allomambo/commerce-moneris
    ```
 
-3. Install the plugin in Craft CMS:
-   - Go to **Settings** → **Plugins** in the Craft CMS control panel
-   - Find "Moneris" in the plugin list
-   - Click "Install"
+3. Install the plugin in Craft:
+   - Go to **Settings** → **Plugins**
+   - Find **Moneris for Craft Commerce**
+   - Click **Install**
 
-### DDEV Setup
-
-If you're using DDEV and the plugin is located outside your project directory, you may need to configure a mount point. Create `config/docker-compose.plugin-mount.yml`:
-
-```yaml
-services:
-  web:
-    volumes:
-      - "$HOME/Sites/diabete-drummond/_plugins:/var/www/html/_plugins"
-```
-
-Then update the path repository URL in `composer.json` to use the absolute path:
-
-```json
-{
-    "repositories": [
-        {
-            "type": "path",
-            "url": "/var/www/html/_plugins/moneris"
-        }
-    ]
-}
-```
+For developing against a local checkout of this plugin (Composer path repository, DDEV mounts, etc.), see [Local development](docs/local-development.md).
 
 ## Configuration
 
 1. Go to **Commerce** → **Settings** → **Gateways**
-2. Click "New Gateway"
-3. Select "Moneris" from the gateway type dropdown
-4. Configure the gateway settings:
-   - **Store ID**: Your Moneris Store ID (can use environment variables)
-   - **API Token**: Your Moneris API Token (can use environment variables)
-   - **Environment**: Select "Staging" or "Production"
-   - **Enable AVS**: Enable Address Verification System
-   - **Enable CVD**: Enable Card Verification Digit
+2. Create a new gateway and choose **Moneris**
+3. Configure:
 
-### Environment Variables
+   | Setting | Description |
+   | --- | --- |
+   | **Store ID** | Your Moneris Store ID |
+   | **API Token** | Your Moneris API Token |
+   | **Test Mode** | Defaults to **enabled** (test/staging). Must be set explicitly to disabled/`false` for production |
+   | **Enable AVS** | Address Verification System |
+   | **Enable CVD** | Card Verification Digit |
 
-You can use Craft CMS's environment variable autosuggest feature to set the Store ID and API Token. Simply type `$` in the field and select from available environment variables, or type the variable name directly (e.g., `$MONERIS_STORE_ID`).
+### Environment variables
+
+Store ID, API Token, and Test Mode support Craft’s environmental settings. In the control panel, set each field to a `$VARIABLE_NAME` reference (autosuggest for text fields; boolean menu for Test Mode).
+
+Example `.env`:
+
+```dotenv
+MONERIS_STORE_ID=store1
+MONERIS_API_TOKEN=your-api-token
+MONERIS_TEST_MODE=true
+```
+
+Then in the gateway settings:
+
+- Store ID → `$MONERIS_STORE_ID`
+- API Token → `$MONERIS_API_TOKEN`
+- Test Mode → `$MONERIS_TEST_MODE`
+
+**Test Mode** stays on unless the resolved value is explicitly false. Accepted boolean values: `true`, `false`, `1`, `0`, `yes`, `no`, `on`, `off`.
+
+For production, set `MONERIS_TEST_MODE=false` (or choose **No** in the control panel).
 
 ## Features
 
-- **Purchase**: Direct payment processing
-- **Authorize**: Pre-authorize payments
-- **Capture**: Capture authorized payments
-- **Refund**: Full and partial refunds
-- **AVS Support**: Address Verification System
-- **CVD Support**: Card Verification Digit
-
-## Requirements
-
-- Craft CMS 5.3.0 or later
-- Craft Commerce 5.0.0 or later
-- PHP 8.2 or later
-- `allomambo/moneris-gateway-api-php` Composer package
+- Purchase (direct payment)
+- Authorize
+- Capture
+- Full and partial refunds
+- AVS support
+- CVD support
 
 ## License
 
 Proprietary
-
