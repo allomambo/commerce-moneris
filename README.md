@@ -62,7 +62,7 @@ Then update the path repository URL in `composer.json` to use the absolute path:
 4. Configure the gateway settings:
    - **Store ID**: Your Moneris Store ID (can use environment variables)
    - **API Token**: Your Moneris API Token (can use environment variables)
-   - **Test Mode**: Enable for Moneris test/staging mode, or disable for production (can use environment variables)
+   - **Test Mode**: Defaults to enabled (test/staging). Must be explicitly set to disabled/`false` for production (can use environment variables)
    - **Enable AVS**: Enable Address Verification System
    - **Enable CVD**: Enable Card Verification Digit
 
@@ -71,7 +71,7 @@ Then update the path repository URL in `composer.json` to use the absolute path:
 You can use Craft CMS's environment variable support for Store ID, API Token, and Test Mode:
 
 - For Store ID and API Token, type `$` in the field and select from available variables, or enter the variable name directly (e.g., `$MONERIS_STORE_ID`).
-- For Test Mode, choose an environment variable from the boolean menu (e.g., `$MONERIS_TEST_MODE`). Supported values: `true`, `false`, `1`, `0`, `yes`, `no`, `on`, `off`.
+- For Test Mode, choose an environment variable from the boolean menu (e.g., `$MONERIS_TEST_MODE`). Test mode stays on unless the value resolves to an explicit false. Supported values: `true`, `false`, `1`, `0`, `yes`, `no`, `on`, `off`.
 
 ## Features
 

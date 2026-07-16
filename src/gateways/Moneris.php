@@ -37,7 +37,8 @@ class Moneris extends Gateway
     public ?string $apiToken = null;
 
     /**
-     * @var bool|string Whether to use Moneris test/staging mode
+     * @var bool|string Whether to use Moneris test/staging mode.
+     * Defaults to true; must be explicitly set to false (in settings/YAML or via an env var) for production.
      */
     public bool|string $testMode = true;
 
@@ -528,11 +529,13 @@ class Moneris extends Gateway
 
     /**
      * Whether Moneris test/staging mode is enabled.
+     *
      * Uses Craft's App::parseBooleanEnv() to handle environment variable references.
+     * Defaults to true unless the resolved value is explicitly false (settings/YAML or env var).
      */
     public function getTestMode(): bool
     {
-        return App::parseBooleanEnv($this->testMode) ?? true;
+        return App::parseBooleanEnv($this->testMode) !== false;
     }
 
     /**
