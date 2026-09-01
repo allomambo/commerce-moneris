@@ -5,11 +5,15 @@ namespace allomambo\CommerceMoneris\helpers;
 use Craft;
 
 /**
- * Maps Moneris ISO response codes to clean, localized user-facing messages.
+ * Maps Moneris response fields to clean, localized user-facing messages.
  *
- * Per Moneris documentation: "Do NOT validate the combination of RBC and ISO
- * response codes. These are liable to change without notice." — ISO codes are
- * therefore the only reliable key used here.
+ * Pass/fail is RBC-only (see MonerisResponseCode). ISO is used for decline
+ * copy after the RBC says declined — the same ISO is approved or declined
+ * depending on the RBC (e.g. ISO 01 + RBC 027 = Mastercard approved;
+ * ISO 01 + RBC 050 = UnionPay decline).
+ *
+ * Per Moneris: "Do NOT validate the combination of RBC and ISO response
+ * codes. These are liable to change without notice."
  */
 class MonerisResponseMessage
 {
@@ -17,36 +21,41 @@ class MonerisResponseMessage
      * Resolve a user-facing, localized message from the Moneris response fields.
      *
      * Priority:
-     *  1. ISO code match (always preferred — standardized and stable)
-     *  2. Generic decline fallback for response codes >= 050
-     *  3. Cleaned raw message (strip padding, asterisks, equals signs)
-     *  4. Generic fallback
+     *  1. Approved RBC: cleaned raw APPROVED message, or success copy — never ISO
+     *  2. Declined RBC: ISO code match
+     *  3. Generic decline fallback for response codes >= 050
+     *  4. Cleaned raw message (strip padding, asterisks, equals signs)
+     *  5. Generic fallback
      */
     public static function resolve(string $isoCode, string $responseCode, string $rawMessage): string
     {
         $isoCode = trim($isoCode);
 
-        // Step 1 — ISO code lookup
+        // Approved RBC — never map ISO (same ISO can mean approve or decline)
+        if (MonerisResponseCode::isApproved($responseCode)) {
+            $cleaned = self::cleanRawMessage($rawMessage);
+            if ($cleaned !== '') {
+                return $cleaned;
+            }
+
+            return Craft::t('moneris-gateway', 'Payment approved.');
+        }
+
+        // Decline / incomplete — ISO lookup is safe here
         $message = self::messageForIso($isoCode);
         if ($message !== null) {
             return $message;
         }
 
-        // Step 2 — generic decline for any unrecognised code >= 050
-        if ($responseCode !== '' && $responseCode !== 'null') {
-            $numericCode = (int)$responseCode;
-            if ($numericCode >= 50) {
-                return Craft::t('moneris-gateway', 'Your payment was declined. Please try a different card.');
-            }
+        if ($responseCode !== '' && strtolower($responseCode) !== 'null' && is_numeric($responseCode) && (int) $responseCode >= 50) {
+            return Craft::t('moneris-gateway', 'Your payment was declined. Please try a different card.');
         }
 
-        // Step 3 — clean up the raw Moneris terminal message
         $cleaned = self::cleanRawMessage($rawMessage);
         if ($cleaned !== '') {
             return $cleaned;
         }
 
-        // Step 4 — final fallback
         return Craft::t('moneris-gateway', 'Your payment could not be processed. Please try again.');
     }
 

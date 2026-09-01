@@ -5,6 +5,7 @@ namespace allomambo\CommerceMoneris\models;
 use Craft;
 use craft\commerce\base\RequestResponseInterface;
 use craft\commerce\models\Transaction;
+use allomambo\CommerceMoneris\helpers\MonerisResponseCode;
 use allomambo\CommerceMoneris\helpers\MonerisResponseMessage;
 
 /**
@@ -44,20 +45,11 @@ class MonerisRequestResponse implements RequestResponseInterface
      */
     public function isSuccessful(): bool
     {
-        // Check if response object is valid
         if (!is_object($this->response) || !method_exists($this->response, 'getResponseCode')) {
             return false;
         }
 
-        $responseCode = $this->getResponseCode();
-
-        // Response code 027 indicates success in Moneris
-        // Also check for empty/null response code which indicates failure
-        if (empty($responseCode) || $responseCode === 'null') {
-            return false;
-        }
-
-        return $responseCode === '027' || $responseCode === '001';
+        return MonerisResponseCode::isApproved($this->getResponseCode());
     }
 
     /**
@@ -151,13 +143,18 @@ class MonerisRequestResponse implements RequestResponseInterface
         return [
             'response_code' => $this->getResponseCode(),
             'message' => $this->getMessage(),
+            'raw_message' => $this->responseString('getMessage'),
             'transaction_number' => $this->getTransactionReference(),
-            'receipt_id' => $this->response->getReceiptId() ?? '',
-            'iso_code' => $this->response->getISO() ?? '',
-            'auth_code' => $this->response->getAuthCode() ?? '',
-            'card_type' => $this->response->getCardType() ?? '',
-            'trans_date' => $this->response->getTransDate() ?? '',
-            'trans_time' => $this->response->getTransTime() ?? '',
+            'receipt_id' => $this->responseString('getReceiptId'),
+            'iso_code' => $this->responseString('getISO'),
+            'auth_code' => $this->responseString('getAuthCode'),
+            'card_type' => $this->responseString('getCardType'),
+            'complete' => $this->responseString('getComplete'),
+            'timed_out' => $this->responseString('getTimedOut'),
+            'cvd_result' => $this->responseString('getCvdResultCode'),
+            'avs_result' => $this->responseString('getAvsResultCode'),
+            'trans_date' => $this->responseString('getTransDate'),
+            'trans_time' => $this->responseString('getTransTime'),
             'moneris_order_id' => $this->monerisOrderId,
         ];
     }
@@ -171,24 +168,33 @@ class MonerisRequestResponse implements RequestResponseInterface
     }
 
     /**
-     * Get the response code from Moneris
+     * Get the response code from Moneris.
+     *
+     * Must not use empty() — PHP empty("0") is true, and integer 0 would be discarded.
      */
     protected function getResponseCode(): string
     {
-        if (!is_object($this->response)) {
+        $code = $this->responseString('getResponseCode');
+
+        if (($code === '' || strtolower($code) === 'null') && method_exists($this->response, 'getCode')) {
+            $code = $this->responseString('getCode');
+        }
+
+        return $code;
+    }
+
+    /**
+     * Read a string field from the Moneris response object when the getter exists.
+     */
+    protected function responseString(string $method): string
+    {
+        if (!is_object($this->response) || !method_exists($this->response, $method)) {
             return '';
         }
 
-        $code = '';
-        if (method_exists($this->response, 'getResponseCode')) {
-            $code = $this->response->getResponseCode() ?? '';
-        }
+        $value = $this->response->{$method}();
 
-        if (empty($code) && method_exists($this->response, 'getCode')) {
-            $code = $this->response->getCode() ?? '';
-        }
-
-        return (string)$code;
+        return $value === null ? '' : (string) $value;
     }
 }
 
