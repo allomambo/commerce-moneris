@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.2.1-alpha.1 - 2026-09-01
+## Unreleased
 
 ### Fixed
 - Treat any numeric Moneris RBC / `responseCode` below 50 as approved (Amex `025`, Visa/MC `027`, `000`, `001`, …). The previous `027`/`001` whitelist marked successful charges as failed in Craft, which led to retries and duplicate captures.
