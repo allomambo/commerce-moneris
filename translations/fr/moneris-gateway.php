@@ -18,7 +18,8 @@ return [
     'Store ID is required. Please enter a value or use an environment variable.' => 'L\'ID du magasin est requis. Veuillez entrer une valeur ou utiliser une variable d\'environnement.',
     'API Token is required. Please enter a value or use an environment variable.' => 'Le jeton API est requis. Veuillez entrer une valeur ou utiliser une variable d\'environnement.',
 
-    // Messages d'erreur de paiement
+    // Messages de paiement
+    'Payment approved.' => 'Paiement approuvé.',
     'Invalid response from payment gateway' => 'Réponse invalide de la passerelle de paiement.',
     'Payment timed out. Please try again.' => 'Le délai de paiement a expiré. Veuillez réessayer.',
     'Your payment was declined. Please contact your bank or try a different card.' => 'Votre paiement a été refusé. Veuillez contacter votre banque ou utiliser une autre carte.',
