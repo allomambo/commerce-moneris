@@ -24,8 +24,8 @@
   },
   "require": {
     "php": "^8.2",
-    "craftcms/cms": "^5.1.0",
-    "craftcms/commerce": "^5.0.13",
+    "craftcms/cms": "^5.11.5",
+    "craftcms/commerce": "^5.7.5",
     "allomambo/moneris-gateway-api-php": "dev-main"
   },
   "autoload": {

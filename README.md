@@ -5,8 +5,8 @@ A Craft CMS plugin that provides a Moneris payment gateway for Craft Commerce, u
 ## Requirements
 
 - PHP 8.2 or later
-- Craft CMS 5.1.0 or later
-- Craft Commerce 5.0.13 or later
+- Craft CMS 5.11.5 or later
+- Craft Commerce 5.7.5 or later
 
 ## Installation
 
